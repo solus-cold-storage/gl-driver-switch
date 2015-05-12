@@ -74,6 +74,10 @@ static bool update_links(const char *name)
                         fprintf(stderr, "No memory to complete action\n");
                         abort();
                 }
+                /* Non-fatal due to a chicken-and-egg situation with xorg-server's libglx */
+                if (!path_exists(p)) {
+                        continue;
+                }
                 if (!(lbuf = realpath(p, NULL))) {
                         fprintf(stderr, "Cannot read link: %s\n", strerror(errno));
                         return false;
