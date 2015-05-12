@@ -92,6 +92,13 @@ static bool update_links(const char *name)
                                 fprintf(stderr, "Unable to remove %s: %s\n", tgt, strerror(errno));
                                 return false;
                         }
+                } else {
+                        if (!path_exists(tdir)) {
+                                if ((mkdir(tdir, 00755)) != 0) {
+                                        fprintf(stderr, "Unable to install required directory: %s: %s\n", tdir, strerror(errno));
+                                        return false;
+                                }
+                        }
                 }
                 if (symlink(lbuf, tgt) != 0) {
                         fprintf(stderr, "Unable to link %s: %s\n", lbuf, strerror(errno));
@@ -123,7 +130,7 @@ int main(int argc, char **argv)
                 return EXIT_FAILURE;
         }
         tgt = argv[2];
-        if (!streq(tgt, "nvidia")) {
+        if (!streq(tgt, "nvidia") && !streq(tgt, "default")) {
                 fprintf(stderr, "Unsupported driver: %s\n", tgt);
                 return EXIT_FAILURE;
         }
