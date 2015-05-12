@@ -26,6 +26,8 @@
 #define GLX_DIR "/usr/lib/glx-provider"
 #define TGT_DIR "/usr/lib"
 #define DRIVER_DIR "/usr/lib/xorg/modules/extensions"
+#define NV_PATH "/usr/lib/glx-provider/nvidia"
+#define CHECK_FILE TGT_DIR "/libEGL.so.1"
 
 static inline const char *usage(void)
 {
@@ -133,6 +135,15 @@ int main(int argc, char **argv)
         if (!streq(tgt, "nvidia") && !streq(tgt, "default")) {
                 fprintf(stderr, "Unsupported driver: %s\n", tgt);
                 return EXIT_FAILURE;
+        }
+
+        if (streq(tgt, "default")) {
+                if (path_exists(NV_PATH)) {
+                        /* Only allow a set-link if no links are installed yet */
+                        if (path_exists(CHECK_FILE)) {
+                                return EXIT_SUCCESS;
+                        }
+                }
         }
 
         if (!update_links(tgt)) {
