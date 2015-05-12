@@ -57,16 +57,15 @@ static inline void _frees_(void *p)
  */
 static bool update_links(const char *name)
 {
-        char lbuf[PATH_MAX] = { 0 };
-
         const char *paths[] = {
-                "libGL.so.1", "libEGL.so.1", "libGLESv2.so.2", "libglx.so.1"
+                "libGL.so.1", "libEGL.so.1", "libGLESv1_CM.so.1", "libGLESv2.so.2", "libglx.so.1"
         };
 
 
         for (uint i = 0; i < sizeof(paths)/sizeof(paths[0]); i++) {
                 _autofree_str char *p = NULL;
                 _autofree_str char *tgt = NULL;
+                _autofree_str char *lbuf = NULL;
 
                 const char *tdir = streq(paths[i], "libglx.so.1") ? DRIVER_DIR : TGT_DIR;
                 /* Target name is actually libglx.so, but we read from libglx.so.1 */
@@ -75,7 +74,7 @@ static bool update_links(const char *name)
                         fprintf(stderr, "No memory to complete action\n");
                         abort();
                 }
-                if (!readlink(p, lbuf, sizeof(lbuf))) {
+                if (!(lbuf = realpath(p, NULL))) {
                         fprintf(stderr, "Cannot read link: %s\n", strerror(errno));
                         return false;
                 }
