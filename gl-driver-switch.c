@@ -37,7 +37,7 @@ static inline const char *usage(void)
 static inline bool path_exists(const char *p)
 {
         __attribute__ ((unused)) struct stat st = {0};
-        return ((stat(p, &st) == 0));
+        return ((lstat(p, &st) == 0));
 }
 
 static inline void _frees_(void *p)
