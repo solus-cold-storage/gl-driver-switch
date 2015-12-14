@@ -23,11 +23,15 @@
 
 #define streq(x,y) strcmp(x,y) == 0
 
-#define GLX_DIR "/usr/lib/glx-provider"
-#define TGT_DIR "/usr/lib"
-#define DRIVER_DIR "/usr/lib/xorg/modules/extensions"
-#define NV_PATH "/usr/lib/glx-provider/nvidia"
-#define CHECK_FILE TGT_DIR "/libEGL.so.1"
+
+#define NV_PATH    "/usr/lib/glx-provider/nvidia"
+#define CHECK_FILE "/usr/lib/libEGL.so.1"
+
+typedef struct GlDriverConfig {
+        const char *glx_dir;
+        const char *tgt_dir;
+        const char *driver_dir;
+} GlDriverConfig;
 
 static inline const char *usage(void)
 {
@@ -57,7 +61,7 @@ static inline void _frees_(void *p)
  * @param name Name, i.e. nvidia
  * @return a boolean value indicating success of the operation
  */
-static bool update_links(const char *name)
+static bool update_links(GlDriverConfig *config, const char *name)
 {
         const char *paths[] = {
                 "libGL.so.1", "libEGL.so.1", "libGLESv1_CM.so.1", "libGLESv2.so.2", "libglx.so.1"
@@ -69,10 +73,10 @@ static bool update_links(const char *name)
                 _autofree_str char *tgt = NULL;
                 _autofree_str char *lbuf = NULL;
 
-                const char *tdir = streq(paths[i], "libglx.so.1") ? DRIVER_DIR : TGT_DIR;
+                const char *tdir = streq(paths[i], "libglx.so.1") ? config->driver_dir : config->tgt_dir;
                 /* Target name is actually libglx.so, but we read from libglx.so.1 */
                 const char *lp = streq(paths[i], "libglx.so.1") ? "libglx.so" : paths[i];
-                if (!asprintf(&p, "%s/%s/%s", GLX_DIR, name, paths[i])) {
+                if (!asprintf(&p, "%s/%s/%s", config->glx_dir, name, paths[i])) {
                         fprintf(stderr, "No memory to complete action\n");
                         abort();
                 }
@@ -115,6 +119,16 @@ int main(int argc, char **argv)
 {
         const char *cmd = NULL;
         const char *tgt = NULL;
+        GlDriverConfig native = {
+                .glx_dir = "/usr/lib/glx-provider",
+                .tgt_dir = "/usr/lib",
+                .driver_dir = "/usr/lib/xorg/modules/extensions"
+        };
+        GlDriverConfig emul32 = {
+                .glx_dir = "/usr/lib32/glx-provider",
+                .tgt_dir = "/usr/lib32",
+                .driver_dir = "/usr/lib32/xorg/modules/extensions"
+        };
 
         if (argc < 3) {
                 fprintf(stderr, usage(), argv[0]);
@@ -146,7 +160,12 @@ int main(int argc, char **argv)
                 }
         }
 
-        if (!update_links(tgt)) {
+        if (!update_links(&native, tgt)) {
+                fprintf(stderr, "gl-driver-switch: Failed to update native: %s\n", tgt);
+                return EXIT_FAILURE;
+        }
+        if (!update_links(&emul32, tgt)) {
+                fprintf(stderr, "gl-driver-switch: Failed to update emul32: %s\n", tgt);
                 return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
