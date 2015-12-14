@@ -1,4 +1,4 @@
-AC_INIT([gl-driver-switch], 1, [ikey@solus-project.com], [gl-driver-switch], [https://solus-project.com/])
+AC_INIT([gl-driver-switch], 2, [ikey@solus-project.com], [gl-driver-switch], [https://solus-project.com/])
 AM_INIT_AUTOMAKE([-Wno-portability no-dist-gzip dist-xz foreign subdir-objects])
 AC_PROG_CC
 AC_PROG_CC_STDC
